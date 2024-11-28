@@ -2,6 +2,11 @@
 
 # dependencies
 node_modules/
+.env
+# Ignore Android build files
+android/
+android/build/
+ios/build/
 
 # Expo
 .expo/
@@ -34,3 +39,10 @@ yarn-error.*
 
 # typescript
 *.tsbuildinfo
+
+# Gradle
+.gradle/
+android/.gradle/
+android/gradlew
+android/gradlew.bat
+android/gradle/wrapper/*.jar

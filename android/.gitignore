@@ -1,0 +1,27 @@
+# OSX
+#
+.DS_Store
+
+# Android/IntelliJ
+#
+build/
+.idea
+.gradle
+local.properties
+*.iml
+*.hprof
+.cxx/
+
+# Bundle artifacts
+*.jsbundle
+
+# Gradle
+.gradle/
+android/.gradle/
+android/gradlew
+android/gradlew.bat
+android/gradle/wrapper/*.jar
+
+# Ignore Android build files
+android/
+
