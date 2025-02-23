@@ -1,139 +1,134 @@
 import React, { useState, useEffect } from 'react';
-import { 
-  View, 
-  Text, 
-  StyleSheet, 
-  TouchableOpacity, 
-  TextInput,
-  Alert
-} from 'react-native';
-import { useAuth } from '../context/AuthContext';
+import { View, Text, TextInput, Button, StyleSheet, ScrollView, Alert } from 'react-native';
 import { supabase } from '../lib/supabase';
-import { BottomTabScreenProps } from '@react-navigation/bottom-tabs';
-import { MainTabParamList } from '../navigation/AppNavigation';
+import { useAuth } from '../context/AuthContext';
 
-type ProfileScreenProps = BottomTabScreenProps<MainTabParamList, 'Profile'>;
-
-export default function ProfileScreen({ navigation }: ProfileScreenProps) {
+const ProfileScreen = () => {
   const { user } = useAuth();
-  const [username, setUsername] = useState('');
-  const [loading, setLoading] = useState(false);
+  const [profile, setProfile] = useState({
+    username: '',
+    phone: '',
+    email: user?.email || '',
+  });
+  const [isLoading, setIsLoading] = useState(false);
 
   useEffect(() => {
     fetchProfile();
-  }, [user]);
+  }, []);
 
   const fetchProfile = async () => {
-    if (!user) return;
+    try {
+      const { data, error } = await supabase
+        .from('profiles')
+        .select('*')
+        .eq('id', user?.id)
+        .single();
 
-    setLoading(true);
-    const { data, error } = await supabase
-      .from('profiles')
-      .select('username')
-      .eq('id', user.id)
-      .single();
+      if (error) {
+        throw error;
+      }
 
-    if (error) {
-      console.error('Error fetching profile:', error);
-    } else if (data) {
-      setUsername(data.username || '');
+      if (data) {
+        setProfile({
+          username: data.username || '',
+          phone: data.phone || '',
+          email: user?.email || '',
+        });
+      }
+    } catch (error) {
+      Alert.alert('Error', 'Failed to fetch profile');
+      console.error('Fetch profile error:', error);
     }
-    setLoading(false);
   };
 
   const updateProfile = async () => {
-    if (!user) return;
+    setIsLoading(true);
+    try {
+      const { error } = await supabase
+        .from('profiles')
+        .update({
+          username: profile.username,
+          phone: profile.phone,
+        })
+        .eq('id', user?.id);
 
-    setLoading(true);
-    const { error } = await supabase
-      .from('profiles')
-      .upsert({ 
-        id: user.id, 
-        username, 
-        updated_at: new Date() 
-      });
+      if (error) {
+        throw error;
+      }
 
-    if (error) {
-      Alert.alert('Error', error.message);
-    } else {
-      Alert.alert('Success', 'Profile updated successfully');
+      Alert.alert('Success', 'Profile Updated Successfully');
+    } catch (error) {
+      Alert.alert('Error', 'Failed to update profile');
+      console.error('Update error:', error);
+    } finally {
+      setIsLoading(false);
     }
-    setLoading(false);
   };
 
   return (
-    <View style={styles.container}>
+    <ScrollView style={styles.container}>
       <Text style={styles.title}>Profile</Text>
-      {user && (
-        <Text style={styles.email}>
-          Email: {user.email}
-        </Text>
-      )}
+      
+      <Text style={styles.label}>Email</Text>
       <TextInput
-        style={styles.input}
-        placeholder="Username"
-        value={username}
-        onChangeText={setUsername}
-        editable={!loading}
+        value={profile.email}
+        editable={false}
+        style={[styles.input, styles.disabledInput]}
       />
-      <TouchableOpacity 
-        style={styles.button}
+
+      <Text style={styles.label}>Username</Text>
+      <TextInput
+        placeholder="Enter username"
+        value={profile.username}
+        onChangeText={(text) => setProfile({...profile, username: text})}
+        style={styles.input}
+      />
+
+      <Text style={styles.label}>Phone Number</Text>
+      <TextInput
+        placeholder="Enter phone number"
+        value={profile.phone}
+        onChangeText={(text) => setProfile({...profile, phone: text})}
+        style={styles.input}
+        keyboardType="phone-pad"
+      />
+
+      <Button 
+        title={isLoading ? "Updating..." : "Update Profile"} 
         onPress={updateProfile}
-        disabled={loading}
-      >
-        <Text style={styles.buttonText}>
-          {loading ? 'Updating...' : 'Update Profile'}
-        </Text>
-      </TouchableOpacity>
-      <TouchableOpacity 
-        style={[styles.button, styles.backButton]}
-        onPress={() => navigation.navigate('Home')}
-      >
-        <Text style={styles.buttonText}>Back to Home</Text>
-      </TouchableOpacity>
-    </View>
+        disabled={isLoading}
+      />
+    </ScrollView>
   );
-}
+};
 
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
     padding: 20,
   },
   title: {
     fontSize: 24,
     fontWeight: 'bold',
     marginBottom: 20,
+    textAlign: 'center',
   },
-  email: {
+  label: {
     fontSize: 16,
-    marginBottom: 20,
-    color: 'gray',
+    marginBottom: 5,
+    color: '#333',
   },
   input: {
-    width: '80%',
-    height: 50,
-    borderColor: 'gray',
     borderWidth: 1,
+    borderColor: '#ddd',
+    padding: 10,
     marginBottom: 15,
-    paddingHorizontal: 10,
     borderRadius: 5,
   },
-  button: {
-    backgroundColor: 'blue',
-    padding: 15,
-    borderRadius: 5,
-    width: '80%',
-    alignItems: 'center',
-    marginVertical: 10,
-  },
-  backButton: {
-    backgroundColor: 'green',
-  },
-  buttonText: {
-    color: 'white',
-    fontWeight: 'bold',
+  disabledInput: {
+    backgroundColor: '#f0f0f0',
+    color: '#888',
   },
 });
+
+export default ProfileScreen;

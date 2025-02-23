@@ -10,6 +10,10 @@ import RegisterScreen from '../screens/RegisterScreen';
 import HomeScreen from '../screens/HomeScreen';
 import ProfileScreen from '../screens/ProfileScreen';
 import LoadingScreen from '../screens/LoadingScreen';
+import SavingsScreen from '../screens/SavingsScreen';
+import LoansScreen from '../screens/LoansScreen';
+import ReferralsScreen from '../screens/ReferralsScreen';
+
 
 // Screen Types
 export type AuthStackParamList = {
@@ -20,6 +24,9 @@ export type AuthStackParamList = {
 export type MainTabParamList = {
   Home: undefined;
   Profile: undefined;
+  Savings: undefined;
+  Loans: undefined;
+  Referrals: undefined;
 };
 
 const AuthStack = createNativeStackNavigator<AuthStackParamList>();
@@ -39,14 +46,17 @@ function MainTabNavigator() {
     <MainTab.Navigator>
       <MainTab.Screen name="Home" component={HomeScreen} />
       <MainTab.Screen name="Profile" component={ProfileScreen} />
+      <MainTab.Screen name="Savings" component={SavingsScreen} />
+      <MainTab.Screen name="Loans" component={LoansScreen} />
+      <MainTab.Screen name="Referrals" component={ReferralsScreen} />
     </MainTab.Navigator>
   );
 }
 
 export default function AppNavigation() {
-  const { session, user } = useAuth();
+  const { session, user, isLoading } = useAuth();
 
-  if (session === null) {
+  if (isLoading) {
     return <LoadingScreen />;
   }
 
